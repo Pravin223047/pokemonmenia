@@ -1,25 +1,50 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 
-function App() {
+import "./App.css";
+import PokemonCard from "./components/Pokemon/PokemonCard";
+
+const App = () => {
+  const [pokemonData, setPokemonData] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  useEffect(() => {
+    const fetchPokemon = async () => {
+      const response = await axios.get(
+        "https://pokeapi.co/api/v2/pokemon?limit=100"
+      );
+      const pokemonList = await Promise.all(
+        response.data.results.map(async (pokemon) => {
+          const pokemonDetails = await axios.get(pokemon.url);
+          return pokemonDetails.data;
+        })
+      );
+      setPokemonData(pokemonList);
+    };
+
+    fetchPokemon();
+  }, []);
+
+  const filteredPokemon = pokemonData.filter((pokemon) =>
+    pokemon.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <h1>Pokémon List</h1>
+      <input
+        type="text"
+        placeholder="Search Pokémon..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+      />
+      <div className="pokemon-container">
+        {filteredPokemon.map((pokemon) => (
+          <PokemonCard key={pokemon.id} pokemon={pokemon} />
+        ))}
+      </div>
     </div>
   );
-}
+};
 
 export default App;
